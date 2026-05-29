@@ -13,7 +13,7 @@ var FINES_DATA = [
             { description: "เงินแดง", amount: "x25 บาท / 0 นาที" },
             { description: "ประกันตัว", amount: "500 บาท / 1 นาที" },
             { description: "หลบหนีการจับกุม", amount: "2,000 บาท / 5 นาที" },
-            { description: "หลบหนีหลังการจับกุม (อยู่ระหว่างทำคดี)", amount: "20,000 บาท / 30 นาที" },
+            { description: "หลบหนีหลังการจับกุม", amount: "20,000 บาท / 30 นาที", detail: "กรณีหลบหนีหลังการจับคุมคือถูกควบคุมตัว(ใส่กุญแจมือแล้ว)และอยู่ในระหว่างการทำคดีแต่พยายามที่จะหนี!!" },
             { description: "หลบหนีออกนอกเมือง - ขึ้นเขา", amount: "10,000 บาท / 15 นาที" },
             { description: "หลบหนีลงน้ำ (ว่ายน้ำ)", amount: "x25 บาท / 0 นาที" },
             { description: "ช่วยเหลือผู้ต้องหาในการหลบหนี", amount: "20,000 บาท / 10 นาที" },
@@ -46,24 +46,38 @@ function renderFines(query) {
     if (!container) return;
     var html = '';
     var q = (query || '').toLowerCase();
+    
     for (var g = 0; g < FINES_DATA.length; g++) {
         var group = FINES_DATA[g];
         var matchedFines = [];
+        
         for (var r = 0; r < group.fines.length; r++) {
-            var desc = group.fines[r].description.toLowerCase();
-            var amt = group.fines[r].amount.toLowerCase();
+            var item = group.fines[r];
+            var desc = item.description.toLowerCase();
+            var amt = item.amount.toLowerCase();
             if (!q || desc.includes(q) || amt.includes(q)) {
-                matchedFines.push(group.fines[r]);
+                matchedFines.push(item);
             }
         }
+        
         if (q && matchedFines.length === 0) continue;
+        
         html += '<div class="rule-group"><h3>' + escapeHtml(group.title) + '</h3><div class="rule-list">';
+        
         for (var r2 = 0; r2 < matchedFines.length; r2++) {
+            var item = matchedFines[r2];
             html += '<div class="rule-item fine-item">' +
                 '<span class="rule-num">' + (r2 + 1) + '.</span>' +
-                '<span class="rule-text">' + escapeHtml(matchedFines[r2].description) + '</span>' +
-                '<span class="fine-amount">' + escapeHtml(matchedFines[r2].amount) + '</span>' +
-                '</div>';
+                '<div class="rule-content">' +
+                '<span>' + escapeHtml(item.description) + ' <b>' + escapeHtml(item.amount) + '</b></span>';
+            
+            // แก้ไขตรงนี้: จากเดิมใช้ note เปลี่ยนเป็น detail ให้ตรงกับข้อมูลด้านบน
+            if (item.detail) {
+                html += '<div class="fine-detail" style="display:block; margin-top:5px; margin-left: 20px; color: #94a3b8; font-size: 0.9em;">' + 
+                        '- ' + escapeHtml(item.detail) + '</div>';
+            }
+            
+            html += '</div></div>';
         }
         html += '</div></div>';
     }
