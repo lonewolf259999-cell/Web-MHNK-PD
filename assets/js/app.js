@@ -11,28 +11,7 @@ function init() {
     DOM.totalCount = document.getElementById('totalCount');
     DOM.totalBadge = document.getElementById('totalBadge');
 
-    // Load data
-    if (DOM.grid) {
-        DOM.grid.innerHTML = '<div class="loading-container"><div class="loader"></div><div class="loading-text">กำลังโหลด...</div></div>';
-    }
-
-    fetchFromSheet().then(function(sheetOfficers) {
-        if (sheetOfficers && sheetOfficers.length > 0) {
-            setDataAndRender(sheetOfficers);
-        } else {
-            var embedded = (typeof EMBEDDED_OFFICERS !== 'undefined') ? EMBEDDED_OFFICERS : null;
-            if (embedded && embedded.length > 0) { setDataAndRender(embedded); }
-            else { setDataAndRender([]); }
-        }
-    });
-
-    // Render rules
-    renderRules();
-
-    // Render fines
-    renderFines();
-
-    // Tab switching
+    // Tab switching — ต้องทำงานก่อนเสมอ
     var tabs = document.querySelectorAll('.nav-tab');
     for (var i = 0; i < tabs.length; i++) {
         tabs[i].addEventListener('click', function() {
@@ -45,7 +24,6 @@ function init() {
     if (DOM.searchInput) {
         DOM.searchInput.addEventListener('input', function() {
             state.searchQuery = DOM.searchInput.value;
-            // ค้นหาตามแท็บปัจจุบัน
             if (state.currentPage === 'roster') {
                 applyFilter();
             } else if (state.currentPage === 'rules') {
@@ -72,6 +50,31 @@ function init() {
             DOM.searchInput.focus();
         });
     }
+
+    // Load data (try Google Sheets, fallback to embedded)
+    if (DOM.grid) {
+        DOM.grid.innerHTML = '<div class="loading-container"><div class="loader"></div><div class="loading-text">กำลังโหลด...</div></div>';
+    }
+
+    fetchFromSheet().then(function(sheetOfficers) {
+        if (sheetOfficers && sheetOfficers.length > 0) {
+            setDataAndRender(sheetOfficers);
+        } else {
+            var embedded = (typeof EMBEDDED_OFFICERS !== 'undefined') ? EMBEDDED_OFFICERS : null;
+            if (embedded && embedded.length > 0) { setDataAndRender(embedded); }
+            else { setDataAndRender([]); }
+        }
+    }).catch(function() {
+        var embedded = (typeof EMBEDDED_OFFICERS !== 'undefined') ? EMBEDDED_OFFICERS : null;
+        if (embedded && embedded.length > 0) { setDataAndRender(embedded); }
+        else { setDataAndRender([]); }
+    });
+
+    // Render rules
+    try { renderRules(); } catch(e) { console.error('renderRules error:', e); }
+
+    // Render fines
+    try { renderFines(); } catch(e) { console.error('renderFines error:', e); }
 }
 
 // DOM Ready
